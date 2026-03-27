@@ -1,0 +1,15 @@
+claw
+playwright
+beautifulsoup4
+lxml
+sqlalchemy
+schedule
+openai
+anthropic
+python-dotenv
+requests
+geopy
+pydantic
+aiohttp
+asyncio
+apscheduler

@@ -1,0 +1,116 @@
+user_profile:
+  target_titles:
+    - "Principal Data Engineer"
+    - "Data Engineer Tech Lead"
+    - "Data Engineer Senior Manager"
+    - "Senior Data Engineer"
+    - "Staff Data Engineer"
+    - "AI Engineer"
+    - "AI Enablement"
+    - "ML Engineer"
+    - "Machine Learning Engineer"
+  
+  location_preferences:
+    home_address: "801 N Fairfax St, Alexandria, VA"
+    preferences:
+      - type: "remote"
+        priority: 1
+        min_salary: 200000
+      - type: "dmv"
+        priority: 2
+        min_salary: 230000
+        max_commute_minutes: 30
+      - type: "bay_area"
+        priority: 3
+        min_salary: 300000
+      - type: "other"
+        priority: 4
+        min_salary: 250000
+  
+  skills:
+    - "Python"
+    - "Data Engineering"
+    - "ETL"
+    - "Data Pipeline"
+    - "Apache Spark"
+    - "Airflow"
+    - "AWS"
+    - "GCP"
+    - "Azure"
+    - "SQL"
+    - "NoSQL"
+    - "Kafka"
+    - "Data Warehousing"
+    - "Machine Learning"
+    - "AI"
+    - "Leadership"
+    - "Team Management"
+
+target_companies:
+  tech_giants:
+    - name: "Google"
+      careers_url: "https://careers.google.com/jobs/results/"
+      priority: "high"
+    - name: "Meta"
+      careers_url: "https://www.metacareers.com/jobs"
+      priority: "high"
+    - name: "Amazon"
+      careers_url: "https://www.amazon.jobs/en/search"
+      priority: "high"
+    - name: "Microsoft"
+      careers_url: "https://careers.microsoft.com/professionals/us/en/search-results"
+      priority: "high"
+    - name: "Apple"
+      careers_url: "https://jobs.apple.com/en-us/search"
+      priority: "high"
+  
+  data_focused:
+    - name: "Databricks"
+      careers_url: "https://www.databricks.com/company/careers"
+      priority: "high"
+    - name: "Snowflake"
+      careers_url: "https://careers.snowflake.com/us/en"
+      priority: "high"
+    - name: "Confluent"
+      careers_url: "https://www.confluent.io/careers/"
+      priority: "high"
+    - name: "dbt Labs"
+      careers_url: "https://www.getdbt.com/careers"
+      priority: "high"
+  
+  ai_companies:
+    - name: "OpenAI"
+      careers_url: "https://openai.com/careers"
+      priority: "high"
+    - name: "Anthropic"
+      careers_url: "https://www.anthropic.com/careers"
+      priority: "high"
+    - name: "Scale AI"
+      careers_url: "https://scale.com/careers"
+      priority: "high"
+
+job_boards:
+  - name: "LinkedIn"
+    url: "https://www.linkedin.com/jobs/search/"
+    requires_auth: true
+  - name: "Indeed"
+    url: "https://www.indeed.com/jobs"
+    requires_auth: false
+  - name: "Glassdoor"
+    url: "https://www.glassdoor.com/Job/jobs.htm"
+    requires_auth: false
+
+crawl_settings:
+  frequency_hours: 6
+  max_concurrent_crawls: 5
+  timeout_seconds: 30
+  retry_attempts: 3
+
+ranking_weights:
+  skills_match: 0.35
+  salary_fit: 0.25
+  company_reputation: 0.20
+  location_preference: 0.20
+
+auto_apply_threshold: 0.6
+human_review_threshold: 0.75
