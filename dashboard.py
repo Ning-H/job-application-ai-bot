@@ -47,6 +47,7 @@ def format_source(source):
     return source
 
 def location_badge(job):
+    # Returns safe HTML - no user input is interpolated
     if job.is_remote:
         return '<span class="badge bg-primary">Remote</span>'
     loc = (job.location or "").lower()
@@ -335,103 +336,124 @@ DETAIL = BASE.replace("{% block content %}{% endblock %}", """
 @app.route("/")
 def index():
     session = get_session()
-    status = request.args.get("status", "all")
-    loc = request.args.get("loc", "all")
+    try:
+        status = request.args.get("status", "all")
+        loc = request.args.get("loc", "all")
 
-    q = session.query(Job)
+        q = session.query(Job)
 
-    if status == "new":
-        q = q.filter(Job.status == "new")
-    elif status == "review":
-        q = q.filter(Job.requires_human_review == True)
-    elif status == "applied":
-        q = q.filter(Job.applied == True)
+        if status == "new":
+            q = q.filter(Job.status == "new")
+        elif status == "review":
+            q = q.filter(Job.requires_human_review == True)
+        elif status == "applied":
+            q = q.filter(Job.applied == True)
 
-    from sqlalchemy import nullslast
-    jobs = q.order_by(Job.overall_score.desc().nullslast(), nullslast(Job.posted_date.desc())).all()
+        jobs = q.order_by(Job.overall_score.desc().nullslast(), Job.posted_date.desc().nullslast()).all()
 
-    if loc == "remote":
-        jobs = [j for j in jobs if j.is_remote]
-    elif loc == "dmv":
-        jobs = [j for j in jobs if j.location and any(
-            x in j.location.lower() for x in ["alexandria", "arlington", "washington", "virginia", "maryland", "dc"]
-        )]
-    elif loc == "bay":
-        jobs = [j for j in jobs if j.location and any(
-            x in j.location.lower() for x in ["san francisco", "bay area", "palo alto", "mountain view", "san jose"]
-        )]
+        if loc == "remote":
+            jobs = [j for j in jobs if j.is_remote]
+        elif loc == "dmv":
+            jobs = [j for j in jobs if j.location and any(
+                x in j.location.lower() for x in ["alexandria", "arlington", "washington", "virginia", "maryland", "dc"]
+            )]
+        elif loc == "bay":
+            jobs = [j for j in jobs if j.location and any(
+                x in j.location.lower() for x in ["san francisco", "bay area", "palo alto", "mountain view", "san jose"]
+            )]
 
-    all_jobs = session.query(Job).all()
-    return render_template_string(
-        INDEX,
-        jobs=jobs,
-        total=len(all_jobs),
-        new_count=sum(1 for j in all_jobs if j.status == "new"),
-        review_count=sum(1 for j in all_jobs if j.requires_human_review),
-        applied_count=sum(1 for j in all_jobs if j.applied),
-        status=status,
-        loc=loc,
-        score_color=score_color,
-        location_badge=location_badge,
-        job_type_icon=job_type_icon,
-        format_source=format_source,
-        now=datetime.utcnow(),
-    )
+        total = session.query(Job).count()
+        new_count = session.query(Job).filter(Job.status == "new").count()
+        review_count = session.query(Job).filter(Job.requires_human_review == True).count()
+        applied_count = session.query(Job).filter(Job.applied == True).count()
+        
+        return render_template_string(
+            INDEX,
+            jobs=jobs,
+            total=total,
+            new_count=new_count,
+            review_count=review_count,
+            applied_count=applied_count,
+            status=status,
+            loc=loc,
+            score_color=score_color,
+            location_badge=location_badge,
+            job_type_icon=job_type_icon,
+            format_source=format_source,
+            now=datetime.utcnow(),
+        )
+    finally:
+        session.close()
 
 
 @app.route("/job/<job_id>")
 def job_detail(job_id):
     session = get_session()
-    job = session.query(Job).filter_by(job_id=job_id).first()
-    if not job:
-        return "Job not found", 404
-    return render_template_string(
-        DETAIL,
-        job=job,
-        score_color=score_color,
-        location_badge=location_badge,
-        job_type_icon=job_type_icon,
-        format_source=format_source,
-    )
+    try:
+        job = session.query(Job).filter_by(job_id=job_id).first()
+        if not job:
+            return "Job not found", 404
+        return render_template_string(
+            DETAIL,
+            job=job,
+            score_color=score_color,
+            location_badge=location_badge,
+            job_type_icon=job_type_icon,
+            format_source=format_source,
+        )
+    finally:
+        session.close()
 
 
 @app.route("/job/<job_id>/apply", methods=["POST"])
 def mark_applied(job_id):
     session = get_session()
-    job = session.query(Job).filter_by(job_id=job_id).first()
-    if job:
-        job.applied = True
-        job.applied_date = datetime.utcnow()
-        job.status = "applied"
-        session.commit()
-    return redirect(url_for("job_detail", job_id=job_id))
+    try:
+        job = session.query(Job).filter_by(job_id=job_id).first()
+        if job:
+            job.applied = True
+            job.applied_date = datetime.utcnow()
+            job.status = "applied"
+            session.commit()
+        return redirect(url_for("job_detail", job_id=job_id))
+    finally:
+        session.close()
 
 
 @app.route("/job/<job_id>/feedback", methods=["POST"])
 def save_feedback(job_id):
     session = get_session()
-    job = session.query(Job).filter_by(job_id=job_id).first()
-    if job:
-        for field in ["user_skills_rating", "user_company_rating",
-                      "user_location_rating", "user_salary_rating", "user_preference_score"]:
-            val = request.form.get(field)
-            if val:
-                setattr(job, field, float(val))
-        job.user_notes = request.form.get("user_notes", "").strip() or None
-        job.feedback_date = datetime.utcnow()
-        session.commit()
-    return redirect(url_for("job_detail", job_id=job_id))
+    try:
+        job = session.query(Job).filter_by(job_id=job_id).first()
+        if job:
+            for field in ["user_skills_rating", "user_company_rating",
+                          "user_location_rating", "user_salary_rating", "user_preference_score"]:
+                val = request.form.get(field)
+                if val:
+                    try:
+                        setattr(job, field, float(val))
+                    except (ValueError, TypeError):
+                        pass
+            job.user_notes = request.form.get("user_notes", "").strip() or None
+            job.feedback_date = datetime.utcnow()
+            session.commit()
+        return redirect(url_for("job_detail", job_id=job_id))
+    finally:
+        session.close()
 
 
 @app.route("/job/<job_id>/status", methods=["POST"])
 def set_status(job_id):
     session = get_session()
-    job = session.query(Job).filter_by(job_id=job_id).first()
-    new_status = request.form.get("status")
-    if job and new_status:
-        job.status = new_status
-        session.commit()
-    return redirect(url_for("job_detail", job_id=job_id))
+    try:
+        job = session.query(Job).filter_by(job_id=job_id).first()
+        new_status = request.form.get("status")
+        if job and new_status:
+            job.status = new_status
+            session.commit()
+        return redirect(url_for("job_detail", job_id=job_id))
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":

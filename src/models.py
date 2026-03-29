@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, JSON, text
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, JSON, text, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -13,7 +13,7 @@ class Job(Base):
     __tablename__ = 'jobs'
     
     id = Column(Integer, primary_key=True)
-    job_id = Column(String, unique=True, nullable=False)
+    job_id = Column(String, unique=True, nullable=False, index=True)
     title = Column(String, nullable=False)
     company = Column(String, nullable=False)
     location = Column(String)
@@ -22,7 +22,7 @@ class Job(Base):
     description = Column(Text)
     url = Column(String, nullable=False)
     source = Column(String)
-    posted_date = Column(DateTime)
+    posted_date = Column(DateTime, index=True)
     discovered_date = Column(DateTime, default=datetime.utcnow)
     
     is_remote = Column(Boolean, default=False)
@@ -32,13 +32,13 @@ class Job(Base):
     salary_score = Column(Float)
     company_score = Column(Float)
     location_score = Column(Float)
-    overall_score = Column(Float)
+    overall_score = Column(Float, index=True)
     
-    status = Column(String, default='new')
-    applied = Column(Boolean, default=False)
+    status = Column(String, default='new', index=True)
+    applied = Column(Boolean, default=False, index=True)
     applied_date = Column(DateTime)
     
-    requires_human_review = Column(Boolean, default=False)
+    requires_human_review = Column(Boolean, default=False, index=True)
     auto_apply_eligible = Column(Boolean, default=False)
     
     summary = Column(Text)   # AI-generated summary
@@ -52,6 +52,11 @@ class Job(Base):
     user_preference_score = Column(Float)   # overall personal preference
     user_notes            = Column(Text)    # free-text reasoning
     feedback_date         = Column(DateTime)
+    
+    # Composite index for common query patterns
+    __table_args__ = (
+        Index('ix_job_status_score', 'status', 'overall_score'),
+    )
 
 class Company(Base):
     __tablename__ = 'companies'
@@ -83,21 +88,26 @@ def init_db():
     engine = get_engine()
     Base.metadata.create_all(engine)
     # Add new columns to existing DBs without losing data
+    # Using a whitelist of allowed columns to avoid SQL injection
+    allowed_columns = {
+        "summary": "TEXT",
+        "user_skills_rating": "REAL",
+        "user_company_rating": "REAL",
+        "user_location_rating": "REAL",
+        "user_salary_rating": "REAL",
+        "user_preference_score": "REAL",
+        "user_notes": "TEXT",
+        "feedback_date": "DATETIME",
+    }
+    
     with engine.connect() as conn:
-        for col in [
-            "summary TEXT",
-            "user_skills_rating REAL",
-            "user_company_rating REAL",
-            "user_location_rating REAL",
-            "user_salary_rating REAL",
-            "user_preference_score REAL",
-            "user_notes TEXT",
-            "feedback_date DATETIME",
-        ]:
+        for col_name, col_type in allowed_columns.items():
             try:
-                conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {col}"))
+                # Safe: col_name and col_type are from a controlled whitelist
+                conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {col_name} {col_type}"))
                 conn.commit()
             except Exception:
+                # Column likely already exists, continue
                 pass
     return engine
 

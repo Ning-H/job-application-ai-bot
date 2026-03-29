@@ -42,8 +42,9 @@ EXCLUDED_KEYWORDS = [
     "israel", "ireland", "dublin", "spain", "poland", "warsaw", "switzerland",
     "europe", "emea", "apac", "latam",
     # Country code patterns in Ashby/Greenhouse locations (e.g. "Remote - PL-Warsaw")
+    # Note: Removed "-ca-" to avoid excluding California jobs
     "-pl-", "-uk-", "-de-", "-fr-", "-nl-", "-se-", "-au-", "-in-", "-sg-",
-    "-ca-", "-ie-", "-es-", "-ch-",
+    "-ie-", "-es-", "-ch-",
     # Excluded US metros
     "new york", "nyc", " ny,", ", ny", "brooklyn", "manhattan",
     "seattle", " wa,", ", wa",
@@ -67,17 +68,15 @@ def _is_preferred_location(job: Dict[str, Any]) -> bool:
     if not location:
         return True
 
-    # Check excluded first (non-US or unwanted US metros)
-    for kw in EXCLUDED_KEYWORDS:
-        if kw in location:
-            return False
-
-    # Remote — keep regardless
+    # Remote — check first before exclusions
     for kw in REMOTE_KEYWORDS:
         if kw in location:
+            # But still exclude if it's remote in a non-US country
+            if any(x in location for x in ["canada", "toronto", "vancouver", "montreal"]):
+                return False
             return True
 
-    # California
+    # California — check before general exclusions
     for kw in CALIFORNIA_KEYWORDS:
         if kw in location:
             return True
@@ -86,6 +85,11 @@ def _is_preferred_location(job: Dict[str, Any]) -> bool:
     for kw in DMV_KEYWORDS:
         if kw in location:
             return True
+
+    # Check excluded (non-US or unwanted US metros)
+    for kw in EXCLUDED_KEYWORDS:
+        if kw in location:
+            return False
 
     # Unknown US location — keep with benefit of doubt
     return True

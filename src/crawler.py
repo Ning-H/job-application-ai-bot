@@ -181,7 +181,6 @@ class JobCrawler:
                     temperature=0.3,
                 )
                 job.summary = resp.choices[0].message.content.strip()
-                self.session.commit()
             except Exception as e:
                 print(f"  Summary error for {job.title}: {e}")
 
@@ -189,6 +188,12 @@ class JobCrawler:
         for i in range(0, len(jobs_without_summary), 10):
             batch = jobs_without_summary[i:i+10]
             await asyncio.gather(*[summarize(j) for j in batch])
+            # Commit the entire batch at once to avoid race conditions
+            try:
+                self.session.commit()
+            except Exception as e:
+                print(f"  Error committing summary batch: {e}")
+                self.session.rollback()
             if i + 10 < len(jobs_without_summary):
                 await asyncio.sleep(2)
 
@@ -230,7 +235,8 @@ class JobCrawler:
                             return
                         html = await resp.text()
                     await asyncio.sleep(0.3)
-                except Exception:
+                except Exception as e:
+                    print(f"  Error fetching description for job {job.job_id}: {e}")
                     return
             soup = BeautifulSoup(html, "lxml")
             desc_el = soup.find("div", class_="show-more-less-html__markup")

@@ -134,7 +134,7 @@ class LLMScorer:
                 "title":       j.get("title", ""),
                 "company":     j.get("company", ""),
                 "location":    j.get("location", ""),
-                "salary":      f"${j['salary_min']:,}–${j['salary_max']:,}" if j.get("salary_min") else "not listed",
+                "salary":      f"${j['salary_min']:,}–${j['salary_max']:,}" if j.get("salary_min") is not None else "not listed",
                 "description": (j.get("description") or "")[:1500],
             }
             for j in jobs

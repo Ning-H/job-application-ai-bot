@@ -30,9 +30,10 @@ class CrawlerWrapper:
     """
 
     async def _fetch_html(self, url: str) -> str:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            try:
+        browser = None
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
                 await page.set_extra_http_headers({
                     "User-Agent": (
@@ -45,12 +46,16 @@ class CrawlerWrapper:
                 # Give JS-heavy pages a moment to render
                 await page.wait_for_timeout(3000)
                 content = await page.content()
-                return content
-            except Exception as e:
-                print(f"  Playwright error fetching {url}: {e}")
-                return ""
-            finally:
                 await browser.close()
+                return content
+        except Exception as e:
+            print(f"  Playwright error fetching {url}: {e}")
+            if browser:
+                try:
+                    await browser.close()
+                except Exception:
+                    pass
+            return ""
 
     async def _extract_jobs(self, html: str, instructions: str) -> List[Dict]:
         # Strip to avoid token limits — 60k chars covers most job listing pages
@@ -95,6 +100,14 @@ class CrawlerWrapper:
                 wait = 10 * (attempt + 1)
                 print(f"  Rate limit hit, retrying in {wait}s... (attempt {attempt + 1}/5)")
                 await asyncio.sleep(wait)
+            except json.JSONDecodeError as e:
+                print(f"  JSON decode error (attempt {attempt + 1}/5): {e}")
+                if attempt < 4:
+                    await asyncio.sleep(2)
+            except Exception as e:
+                print(f"  API error (attempt {attempt + 1}/5): {e}")
+                if attempt < 4:
+                    await asyncio.sleep(5)
         return []
 
     async def scrape(self, url: str, instructions: str) -> Dict[str, Any]:
