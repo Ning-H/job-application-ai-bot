@@ -23,7 +23,10 @@ def is_new_job(job: Any, now: datetime | None = None) -> bool:
     first_seen = _value(job, "first_seen_at") or _value(job, "discovered_date")
     if not first_seen:
         return False
-    freshness_window_hours = max(config.get_crawl_frequency_hours() * 2, 8)
+    reviewed_at = _value(job, "reviewed_at")
+    freshness_window_hours = 24
+    if reviewed_at:
+        return False
     return first_seen >= now - timedelta(hours=freshness_window_hours)
 
 

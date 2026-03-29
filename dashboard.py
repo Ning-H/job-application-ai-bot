@@ -8,6 +8,7 @@ from src.job_board import board_rank_score, fit_score, is_new_job, relative_time
 from src.models import Job, get_session, init_db
 
 app = Flask(__name__)
+TAILSCALE_DASHBOARD_URL = "http://100.108.214.18:8080"
 
 
 def score_color(score):
@@ -98,61 +99,120 @@ BASE = """
   <title>Job Search Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f4f6fb;
-      --panel: #ffffff;
-      --ink: #13233a;
-      --muted: #627086;
-      --accent: #0b6bcb;
-      --accent-soft: #e7f1ff;
-      --warm: #fff4d6;
-      --warm-text: #8c5d00;
-      --new: #d63384;
-      --new-soft: #fde7f3;
+      --bg: #1f201c;
+      --bg-elevated: #272822;
+      --panel: #2d2e27;
+      --panel-deep: #34352d;
+      --ink: #f8f8f2;
+      --muted: #a59f85;
+      --line: #49483e;
+      --cyan: #66d9ef;
+      --green: #a6e22e;
+      --yellow: #e6db74;
+      --orange: #fd971f;
+      --pink: #f92672;
+      --purple: #ae81ff;
     }
     body {
       background:
-        radial-gradient(circle at top left, rgba(11, 107, 203, 0.10), transparent 28%),
-        radial-gradient(circle at top right, rgba(214, 51, 132, 0.10), transparent 24%),
+        radial-gradient(circle at top left, rgba(102, 217, 239, 0.14), transparent 26%),
+        radial-gradient(circle at top right, rgba(249, 38, 114, 0.14), transparent 22%),
+        linear-gradient(160deg, #161712 0%, #1f201c 48%, #11120f 100%),
         var(--bg);
       color: var(--ink);
+      font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+      min-height: 100vh;
     }
-    .navbar-brand { font-weight: 700; letter-spacing: -0.02em; }
+    h1, h2, h3, h4, .navbar-brand {
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    }
+    .navbar {
+      background: rgba(19, 20, 17, 0.94) !important;
+      border-bottom: 1px solid rgba(73, 72, 62, 0.9);
+      backdrop-filter: blur(16px);
+    }
+    .navbar-brand { font-weight: 700; letter-spacing: -0.03em; }
     .surface {
-      background: var(--panel);
-      border: 1px solid rgba(19, 35, 58, 0.08);
+      background: linear-gradient(180deg, rgba(52, 53, 45, 0.95), rgba(39, 40, 34, 0.98));
+      border: 1px solid rgba(73, 72, 62, 0.95);
       border-radius: 18px;
-      box-shadow: 0 18px 50px rgba(19, 35, 58, 0.08);
+      box-shadow: 0 26px 60px rgba(0, 0, 0, 0.34);
     }
     .hero {
-      padding: 1.4rem;
+      padding: 1.55rem;
       margin-bottom: 1rem;
       background:
-        linear-gradient(135deg, rgba(11, 107, 203, 0.10), rgba(214, 51, 132, 0.08)),
-        var(--panel);
+        linear-gradient(140deg, rgba(102, 217, 239, 0.10), rgba(174, 129, 255, 0.08) 48%, rgba(249, 38, 114, 0.10)),
+        linear-gradient(180deg, rgba(52, 53, 45, 0.98), rgba(39, 40, 34, 0.98));
+    }
+    .stat-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
     }
     .stat-card {
-      padding: 1rem;
+      padding: 1rem 1.1rem;
       border-radius: 16px;
-      background: var(--panel);
-      border: 1px solid rgba(19, 35, 58, 0.08);
+      background: linear-gradient(180deg, rgba(57, 58, 49, 0.96), rgba(39, 40, 34, 0.96));
+      border: 1px solid rgba(73, 72, 62, 0.95);
       text-align: center;
       height: 100%;
+      transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--green), var(--orange), var(--pink));
+      opacity: 0.55;
+    }
+    .stat-link:hover .stat-card {
+      transform: translateY(-3px);
+      border-color: rgba(102, 217, 239, 0.75);
+      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
+    }
+    .stat-card-active {
+      border-color: rgba(102, 217, 239, 0.95);
+      box-shadow: 0 0 0 1px rgba(102, 217, 239, 0.26), 0 16px 32px rgba(0, 0, 0, 0.34);
     }
     .filter-bar {
       padding: 1rem;
       margin-bottom: 1rem;
     }
+    .filter-bar .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(73, 72, 62, 0.95);
+      background: rgba(31, 32, 28, 0.86);
+      color: var(--ink);
+      box-shadow: none;
+    }
+    .filter-bar .btn:hover {
+      color: var(--cyan);
+      border-color: rgba(102, 217, 239, 0.75);
+      background: rgba(102, 217, 239, 0.08);
+    }
+    .filter-bar .btn-dark {
+      color: #10110f;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+      border-color: transparent;
+      font-weight: 700;
+    }
     .job-card {
-      border: 0;
       border-radius: 18px;
       transition: transform .14s ease, box-shadow .14s ease;
-      background: var(--panel);
+      background: linear-gradient(180deg, rgba(49, 50, 43, 0.98), rgba(33, 34, 29, 0.98));
+      border: 1px solid rgba(73, 72, 62, 0.92);
     }
     .job-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 18px 40px rgba(19, 35, 58, 0.12);
+      border-color: rgba(166, 226, 46, 0.55);
+      box-shadow: 0 22px 42px rgba(0, 0, 0, 0.34);
     }
     .score-pill {
       min-width: 74px;
@@ -160,26 +220,90 @@ BASE = """
       padding: .45rem .7rem;
       text-align: center;
       font-weight: 700;
-      background: var(--accent-soft);
-      color: var(--accent);
+      background: rgba(166, 226, 46, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(166, 226, 46, 0.28);
     }
-    .summary-copy { color: #3b485b; line-height: 1.45; }
+    .summary-copy { color: rgba(248, 248, 242, 0.92); line-height: 1.5; }
     .meta-line { color: var(--muted); font-size: 0.9rem; }
     .new-badge {
-      background: var(--new-soft);
-      color: var(--new);
-      border: 1px solid rgba(214, 51, 132, 0.18);
+      background: rgba(253, 151, 31, 0.16);
+      color: var(--orange);
+      border: 1px solid rgba(253, 151, 31, 0.28);
     }
     .top-fit {
-      background: var(--warm);
-      color: var(--warm-text);
-      border: 1px solid rgba(140, 93, 0, 0.14);
+      background: rgba(166, 226, 46, 0.14);
+      color: var(--green);
+      border: 1px solid rgba(166, 226, 46, 0.25);
     }
     .detail-label {
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--muted);
+      color: var(--cyan);
+    }
+    .badge.bg-light,
+    .badge.bg-secondary-subtle,
+    .badge.bg-info-subtle,
+    .badge.bg-primary-subtle,
+    .badge.bg-success-subtle {
+      background: rgba(31, 32, 28, 0.82) !important;
+      color: var(--ink) !important;
+      border-color: rgba(73, 72, 62, 0.95) !important;
+    }
+    .badge.bg-dark {
+      background: rgba(174, 129, 255, 0.22) !important;
+      color: #f4efff !important;
+      border: 1px solid rgba(174, 129, 255, 0.28);
+    }
+    .progress {
+      background: rgba(31, 32, 28, 0.9);
+    }
+    .detail-panel,
+    .feedback-panel,
+    .danger-panel {
+      background: rgba(31, 32, 28, 0.72);
+      border: 1px solid rgba(73, 72, 62, 0.95);
+    }
+    .feedback-panel {
+      background: linear-gradient(180deg, rgba(33, 34, 29, 0.88), rgba(28, 29, 25, 0.92));
+    }
+    .danger-panel {
+      background: linear-gradient(180deg, rgba(56, 30, 40, 0.74), rgba(38, 24, 29, 0.84));
+      border-color: rgba(249, 38, 114, 0.22);
+    }
+    .form-control,
+    .form-select {
+      background: rgba(20, 21, 18, 0.92);
+      color: var(--ink);
+      border-color: rgba(73, 72, 62, 0.95);
+    }
+    .form-control:focus,
+    .form-select:focus {
+      background: rgba(20, 21, 18, 0.96);
+      color: var(--ink);
+      border-color: rgba(102, 217, 239, 0.82);
+      box-shadow: 0 0 0 0.2rem rgba(102, 217, 239, 0.12);
+    }
+    .btn-outline-secondary,
+    .btn-outline-danger {
+      color: var(--ink);
+      border-color: rgba(73, 72, 62, 0.95);
+    }
+    .btn-outline-secondary:hover {
+      color: #10110f;
+      background: var(--cyan);
+      border-color: var(--cyan);
+    }
+    .btn-outline-danger:hover {
+      background: var(--pink);
+      border-color: var(--pink);
+    }
+    code {
+      color: var(--yellow);
+      background: rgba(31, 32, 28, 0.86);
+      padding: 0.12rem 0.34rem;
+      border-radius: 0.35rem;
     }
   </style>
 </head>
@@ -187,7 +311,7 @@ BASE = """
 <nav class="navbar navbar-dark bg-dark mb-4">
   <div class="container">
     <a class="navbar-brand" href="/"><i class="bi bi-briefcase-fill me-2"></i>Job Dashboard</a>
-    <span class="text-white-50 small">Direct career sites · ranked for Ning</span>
+    <span class="text-white-50 small">Monokai board for Ning</span>
   </div>
 </nav>
 <div class="container pb-5">
@@ -205,6 +329,7 @@ INDEX = BASE.replace("{% block content %}{% endblock %}", """
       <div class="text-uppercase small text-muted fw-semibold mb-1">Priority Board</div>
       <h2 class="mb-1">Best-fit jobs first</h2>
       <div class="meta-line">Fresh direct-career jobs from the last two weeks, ranked for your data engineering profile.</div>
+      <div class="meta-line mt-2">NEW stays visible for 24h or until you review the job.</div>
     </div>
     <div class="meta-line text-end">
       <div>Pull cadence: every {{ crawl_hours }}h</div>
@@ -215,34 +340,44 @@ INDEX = BASE.replace("{% block content %}{% endblock %}", """
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-md">
-    <div class="stat-card">
-      <div class="fs-3 fw-bold text-primary">{{ active_count }}</div>
-      <div class="text-muted small">Active Jobs</div>
-    </div>
+    <a class="stat-link" href="/?status=all&loc={{ loc }}">
+      <div class="stat-card {{ 'stat-card-active' if status == 'all' else '' }}">
+        <div class="fs-3 fw-bold text-primary">{{ active_count }}</div>
+        <div class="text-muted small">Active Jobs</div>
+      </div>
+    </a>
   </div>
   <div class="col-6 col-md">
-    <div class="stat-card">
-      <div class="fs-3 fw-bold" style="color:var(--new)">{{ new_count }}</div>
-      <div class="text-muted small">New Pulls</div>
-    </div>
+    <a class="stat-link" href="/?status=fresh&loc={{ loc }}">
+      <div class="stat-card {{ 'stat-card-active' if status == 'fresh' else '' }}">
+        <div class="fs-3 fw-bold" style="color:var(--orange)">{{ new_count }}</div>
+        <div class="text-muted small">New Pulls</div>
+      </div>
+    </a>
   </div>
   <div class="col-6 col-md">
-    <div class="stat-card">
-      <div class="fs-3 fw-bold text-success">{{ reviewed_count }}</div>
-      <div class="text-muted small">Reviewed</div>
-    </div>
+    <a class="stat-link" href="/?status=reviewed&loc={{ loc }}">
+      <div class="stat-card {{ 'stat-card-active' if status == 'reviewed' else '' }}">
+        <div class="fs-3 fw-bold text-success">{{ reviewed_count }}</div>
+        <div class="text-muted small">Reviewed</div>
+      </div>
+    </a>
   </div>
   <div class="col-6 col-md">
-    <div class="stat-card">
-      <div class="fs-3 fw-bold text-warning">{{ review_count }}</div>
-      <div class="text-muted small">Strong Matches</div>
-    </div>
+    <a class="stat-link" href="/?status=review&loc={{ loc }}">
+      <div class="stat-card {{ 'stat-card-active' if status == 'review' else '' }}">
+        <div class="fs-3 fw-bold text-warning">{{ review_count }}</div>
+        <div class="text-muted small">Strong Matches</div>
+      </div>
+    </a>
   </div>
   <div class="col-6 col-md">
-    <div class="stat-card">
-      <div class="fs-3 fw-bold text-info">{{ applied_count }}</div>
-      <div class="text-muted small">Applied</div>
-    </div>
+    <a class="stat-link" href="/?status=applied&loc={{ loc }}">
+      <div class="stat-card {{ 'stat-card-active' if status == 'applied' else '' }}">
+        <div class="fs-3 fw-bold text-info">{{ applied_count }}</div>
+        <div class="text-muted small">Applied</div>
+      </div>
+    </a>
   </div>
 </div>
 
@@ -250,6 +385,7 @@ INDEX = BASE.replace("{% block content %}{% endblock %}", """
   <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
     <strong class="me-1">Board:</strong>
     <a href="/?status=all&loc={{ loc }}" class="btn btn-sm {{ 'btn-dark' if status=='all' else 'btn-outline-secondary' }}">All Active</a>
+    <a href="/?status=fresh&loc={{ loc }}" class="btn btn-sm {{ 'btn-dark' if status=='fresh' else 'btn-outline-secondary' }}">Fresh</a>
     <a href="/?status=new&loc={{ loc }}" class="btn btn-sm {{ 'btn-dark' if status=='new' else 'btn-outline-secondary' }}">Unreviewed</a>
     <a href="/?status=reviewed&loc={{ loc }}" class="btn btn-sm {{ 'btn-dark' if status=='reviewed' else 'btn-outline-secondary' }}">Reviewed</a>
     <a href="/?status=review&loc={{ loc }}" class="btn btn-sm {{ 'btn-dark' if status=='review' else 'btn-outline-secondary' }}">Top Matches</a>
@@ -434,7 +570,7 @@ DETAIL = BASE.replace("{% block content %}{% endblock %}", """
       {% if job.summary %}
       <div class="mb-3">
         <div class="detail-label mb-1">Why This Could Fit</div>
-        <div class="bg-light rounded-4 p-3 summary-copy">{{ job.summary }}</div>
+        <div class="detail-panel rounded-4 p-3 summary-copy">{{ job.summary }}</div>
       </div>
       {% endif %}
 
@@ -459,14 +595,14 @@ DETAIL = BASE.replace("{% block content %}{% endblock %}", """
           <i class="bi bi-file-text me-1"></i>Full Description
         </button>
         <div class="collapse show" id="fullDesc">
-          <div class="bg-light rounded-4 p-3 small" style="white-space:pre-wrap; max-height:500px; overflow-y:auto">{{ job.description }}</div>
+          <div class="detail-panel rounded-4 p-3 small" style="white-space:pre-wrap; max-height:500px; overflow-y:auto">{{ job.description }}</div>
         </div>
       </div>
       {% endif %}
     </div>
 
     <div class="col-12 col-lg-5">
-      <div class="border rounded-4 p-3 mb-3" style="background:#fafafa">
+      <div class="feedback-panel rounded-4 p-3 mb-3">
         <div class="fw-semibold mb-3"><i class="bi bi-star-fill text-warning me-1"></i>Your Ratings <span class="text-muted small fw-normal">(used to improve future ranking)</span></div>
         <form method="post" action="/job/{{ job.job_id }}/feedback?status={{ status }}&loc={{ loc }}">
           {% set dims = [
@@ -496,7 +632,7 @@ DETAIL = BASE.replace("{% block content %}{% endblock %}", """
         </form>
       </div>
 
-      <div class="border rounded-4 p-3" style="background:#fff9f9">
+      <div class="danger-panel rounded-4 p-3">
         <div class="fw-semibold mb-2 text-danger"><i class="bi bi-x-circle me-1"></i>Not Fit</div>
         <div class="text-muted small mb-2">Remove this job from the main board and teach the ranking system what to avoid next time.</div>
         <form method="post" action="/job/{{ job.job_id }}/not-fit?status={{ status }}&loc={{ loc }}">
@@ -536,13 +672,19 @@ def index():
             jobs = base_board_query(session).filter(Job.applied == True).all()
         else:
             q = base_board_query(session).filter(false_or_null(Job.applied))
-            if status == "new":
+            if status == "fresh":
+                jobs = [job for job in q.all() if is_new_job(job, now)]
+            elif status == "new":
                 q = q.filter(or_(Job.reviewed_at == None, Job.status == "new"))
+                jobs = q.all()
             elif status == "reviewed":
                 q = q.filter(Job.reviewed_at != None)
+                jobs = q.all()
             elif status == "review":
                 q = q.filter(Job.requires_human_review == True)
-            jobs = q.all()
+                jobs = q.all()
+            else:
+                jobs = q.all()
 
         jobs = [job for job in jobs if location_matches(job, loc)]
         jobs = sorted(
@@ -727,4 +869,5 @@ def mark_not_fit(job_id):
 if __name__ == "__main__":
     init_db()
     print("\n  Job Dashboard running at http://localhost:8080")
+    print(f"  Tailscale access: {TAILSCALE_DASHBOARD_URL}")
     app.run(host="0.0.0.0", port=8080, debug=False)
