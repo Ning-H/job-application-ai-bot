@@ -1,16 +1,21 @@
 from typing import Dict, Any
 import os
-from openai import OpenAI
-from anthropic import Anthropic
 
 class ResumeCustomizer:
     def __init__(self, use_anthropic: bool = False):
         self.use_anthropic = use_anthropic
-        
-        if use_anthropic:
-            self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        else:
-            self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        self.client = None
+        self.client_error = None
+
+        try:
+            if use_anthropic:
+                from anthropic import Anthropic
+                self.client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+            else:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        except Exception as e:
+            self.client_error = str(e)
     
     def load_base_resume(self, resume_path: str = 'resume.txt') -> str:
         try:
@@ -18,8 +23,16 @@ class ResumeCustomizer:
                 return f.read()
         except FileNotFoundError:
             return ""
+
+    def _require_client(self):
+        if self.client is None:
+            raise RuntimeError(
+                "Resume customization client is unavailable. "
+                f"Original error: {self.client_error or 'unknown error'}"
+            )
     
     def customize_resume_for_job(self, base_resume: str, job: Dict[str, Any]) -> str:
+        self._require_client()
         job_title = job.get('title', '')
         company = job.get('company', '')
         description = job.get('description', '')
@@ -61,6 +74,7 @@ Return ONLY the customized resume text, no additional commentary."""
             return response.choices[0].message.content
     
     def generate_cover_letter(self, base_resume: str, job: Dict[str, Any]) -> str:
+        self._require_client()
         job_title = job.get('title', '')
         company = job.get('company', '')
         description = job.get('description', '')

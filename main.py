@@ -3,7 +3,6 @@ import sys
 from src.models import init_db
 from src.scheduler import JobScheduler
 from src.crawler import JobCrawler
-from src.job_manager import JobManager
 
 async def run_once():
     print("Initializing database...")
@@ -20,6 +19,8 @@ async def run_scheduled():
     await scheduler.run_once_then_schedule()
 
 def interactive_mode():
+    from src.job_manager import JobManager
+
     print("Initializing database...")
     init_db()
     
@@ -35,11 +36,12 @@ def interactive_mode():
         print("4. Prepare application package for a job")
         print("5. Mark job as reviewed")
         print("6. Mark job as applied")
-        print("7. View job details")
-        print("8. Exit")
+        print("7. Mark job as not fit")
+        print("8. View job details")
+        print("9. Exit")
         print("="*60)
         
-        choice = input("\nEnter your choice (1-8): ").strip()
+        choice = input("\nEnter your choice (1-9): ").strip()
         
         if choice == '1':
             jobs = manager.get_high_priority_jobs()
@@ -92,13 +94,18 @@ def interactive_mode():
         
         elif choice == '7':
             job_id = input("\nEnter job ID: ").strip()
+            reason = input("Why is it not a fit? ").strip()
+            manager.mark_as_not_fit(job_id, reason)
+
+        elif choice == '8':
+            job_id = input("\nEnter job ID: ").strip()
             job = manager.get_job_by_id(job_id)
             if job:
                 manager.display_job_details(job)
             else:
                 print(f"\nJob {job_id} not found.")
         
-        elif choice == '8':
+        elif choice == '9':
             print("\nExiting...")
             break
         

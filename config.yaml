@@ -13,14 +13,23 @@ user_profile:
   - Senior Analytics Engineer
   - Staff Analytics Engineer
   - Principal Analytics Engineer
+  - Data Platform Engineer
+  - Senior Data Platform Engineer
+  - Staff Data Platform Engineer
+  - Data Infrastructure Engineer
+  - Senior Data Infrastructure Engineer
   - AI Engineer
+  - Applied AI Engineer
   - AI Deployment Engineer
   - AI Enablement
+  - AI Platform Engineer
   - ML Engineer
   - Machine Learning Engineer
   - Senior ML Engineer
   - Staff ML Engineer
   - Principal ML Engineer
+  - ML Platform Engineer
+  - Senior ML Platform Engineer
   - ML Engineering Manager
   - Machine Learning Manager
   location_preferences:
@@ -62,6 +71,10 @@ user_profile:
   - Data Science
   - Snowflake
   - Databricks
+  - dbt
+  - Lakehouse
+  - LLM
+  - GenAI
 target_companies:
   greenhouse:
   - name: dbt Labs
@@ -250,7 +263,7 @@ direct_careers:
   priority: high
 - company: Microsoft
   ats_type: direct_microsoft_careers
-  url: https://jobs.careers.microsoft.com/global/en/search
+  url: https://apply.careers.microsoft.com/careers/jobs
   priority: high
 - company: Meta
   ats_type: direct_meta_careers
@@ -286,6 +299,7 @@ notes:
   - Meta moved out of greenhouse into direct_careers
   - Databricks moved out of greenhouse into direct_careers
   - Snowflake moved out of ashby into direct_careers
+  - Microsoft moved from jobs.careers.microsoft.com to apply.careers.microsoft.com
   founding_engineer_watchlist:
   - company: Trove
     ats_type: ashby

@@ -117,7 +117,7 @@ class JobCrawler:
         if not direct_list:
             return []
 
-        print(f"\nCrawling {len(direct_list)} direct-careers companies (Playwright)...")
+        print(f"\nCrawling {len(direct_list)} direct-careers companies...")
         all_jobs: List[Dict[str, Any]] = []
 
         for company_cfg in direct_list:
@@ -155,21 +155,80 @@ class JobCrawler:
 
     # ── db ────────────────────────────────────────────────────────────────────
 
+    def _merge_job_data(self, existing: Job, job_data: Dict[str, Any], seen_at: datetime):
+        updatable_fields = [
+            "title", "company", "location", "url", "source", "posted_date",
+            "is_remote", "location_type", "skills_match_score", "salary_score",
+            "company_score", "location_score", "overall_score",
+            "requires_human_review", "auto_apply_eligible", "summary", "extra_data",
+        ]
+
+        for field in updatable_fields:
+            new_value = job_data.get(field)
+            if new_value is not None:
+                setattr(existing, field, new_value)
+
+        new_description = job_data.get("description")
+        if new_description and len(new_description) > len(existing.description or ""):
+            existing.description = new_description
+
+        if job_data.get("salary_min") is not None:
+            existing.salary_min = job_data["salary_min"]
+        if job_data.get("salary_max") is not None:
+            existing.salary_max = job_data["salary_max"]
+
+        existing.last_seen_at = seen_at
+        existing.discovered_date = existing.discovered_date or existing.first_seen_at or seen_at
+        existing.first_seen_at = existing.first_seen_at or existing.discovered_date or seen_at
+
+        if not existing.status:
+            existing.status = "new"
+
     def save_jobs_to_db(self, jobs: List[Dict[str, Any]]) -> tuple:
+        now = datetime.utcnow()
         new_jobs = 0
-        for job_data in jobs:
+        deduped_jobs = {}
+
+        for job in jobs:
+            job_id = job.get("job_id")
+            if job_id:
+                deduped_jobs[job_id] = job
+
+        if not deduped_jobs:
+            return 0, 0
+
+        existing_jobs = {
+            job.job_id: job
+            for job in self.session.query(Job).filter(Job.job_id.in_(list(deduped_jobs.keys()))).all()
+        }
+
+        for job_id, job_data in deduped_jobs.items():
             try:
-                if self.session.query(Job).filter_by(job_id=job_data["job_id"]).first():
+                existing = existing_jobs.get(job_id)
+                if existing:
+                    self._merge_job_data(existing, job_data, now)
                     continue
-                self.session.add(Job(**job_data))
-                self.session.commit()
+
+                payload = dict(job_data)
+                payload.setdefault("status", "new")
+                payload.setdefault("discovered_date", now)
+                payload.setdefault("first_seen_at", now)
+                payload.setdefault("last_seen_at", now)
+                self.session.add(Job(**payload))
                 new_jobs += 1
             except IntegrityError:
                 self.session.rollback()
             except Exception as e:
                 print(f"  DB save error: {e}")
                 self.session.rollback()
-        return new_jobs, len(jobs)
+
+        try:
+            self.session.commit()
+        except Exception as e:
+            print(f"  DB commit error: {e}")
+            self.session.rollback()
+
+        return new_jobs, len(deduped_jobs)
 
     async def generate_summaries(self):
         """Generate 2-3 sentence AI summaries for scored jobs that don't have one yet."""

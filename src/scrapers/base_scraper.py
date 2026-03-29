@@ -1,22 +1,31 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 import asyncio
 import hashlib
 import json
 import os
 from datetime import datetime
-from openai import AsyncOpenAI, RateLimitError
-from playwright.async_api import async_playwright
 from dotenv import load_dotenv
 
 load_dotenv()
 
-_openai_client: Optional[AsyncOpenAI] = None
+if TYPE_CHECKING:
+    from openai import AsyncOpenAI
 
 
-def get_openai_client() -> AsyncOpenAI:
-    global _openai_client
+_openai_client: Optional[Any] = None
+_rate_limit_error_cls = None
+
+
+def get_openai_client() -> "AsyncOpenAI":
+    global _openai_client, _rate_limit_error_cls
     if _openai_client is None:
+        try:
+            from openai import AsyncOpenAI, RateLimitError
+        except Exception as exc:
+            raise RuntimeError(f"OpenAI SDK unavailable: {exc}") from exc
+
+        _rate_limit_error_cls = RateLimitError
         _openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     return _openai_client
 
@@ -32,6 +41,7 @@ class CrawlerWrapper:
     async def _fetch_html(self, url: str) -> str:
         browser = None
         try:
+            from playwright.async_api import async_playwright
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
@@ -61,7 +71,12 @@ class CrawlerWrapper:
         # Strip to avoid token limits — 60k chars covers most job listing pages
         html_snippet = html[:60000]
 
-        client = get_openai_client()
+        try:
+            client = get_openai_client()
+        except Exception as e:
+            print(f"  OpenAI client unavailable: {e}")
+            return []
+
         messages = [
             {
                 "role": "system",
@@ -96,15 +111,17 @@ class CrawlerWrapper:
                 if isinstance(data, dict) and "jobs" in data:
                     return data["jobs"]
                 return []
-            except RateLimitError as e:
-                wait = 10 * (attempt + 1)
-                print(f"  Rate limit hit, retrying in {wait}s... (attempt {attempt + 1}/5)")
-                await asyncio.sleep(wait)
-            except json.JSONDecodeError as e:
-                print(f"  JSON decode error (attempt {attempt + 1}/5): {e}")
-                if attempt < 4:
-                    await asyncio.sleep(2)
             except Exception as e:
+                if _rate_limit_error_cls is not None and isinstance(e, _rate_limit_error_cls):
+                    wait = 10 * (attempt + 1)
+                    print(f"  Rate limit hit, retrying in {wait}s... (attempt {attempt + 1}/5)")
+                    await asyncio.sleep(wait)
+                    continue
+                if isinstance(e, json.JSONDecodeError):
+                    print(f"  JSON decode error (attempt {attempt + 1}/5): {e}")
+                    if attempt < 4:
+                        await asyncio.sleep(2)
+                    continue
                 print(f"  API error (attempt {attempt + 1}/5): {e}")
                 if attempt < 4:
                     await asyncio.sleep(5)
