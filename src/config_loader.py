@@ -34,6 +34,9 @@ class Config:
                 companies.extend(company_list)
         return companies
     
+    def get_direct_careers(self) -> List[Dict[str, Any]]:
+        return self.config.get("direct_careers", [])
+
     def get_job_boards(self) -> List[Dict[str, Any]]:
         return self.job_boards
     

@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 from src.scrapers.company_scraper import CompanyScraper
 from src.scrapers.job_board_scraper import JobBoardScraper
+from src.scrapers.direct_scraper import DirectScraper
 from src.filters import JobFilter
 from src.llm_scorer import LLMScorer
 from src.models import Job, CrawlLog, get_session
@@ -15,6 +16,7 @@ class JobCrawler:
     def __init__(self):
         self.company_scraper = CompanyScraper()
         self.job_board_scraper = JobBoardScraper()
+        self.direct_scraper = DirectScraper()
         self.job_filter = JobFilter()
         self.llm_scorer = LLMScorer()
         self.session = get_session()
@@ -105,6 +107,28 @@ class JobCrawler:
             for r in results:
                 if isinstance(r, list):
                     all_jobs.extend(r)
+
+        return all_jobs
+
+    # ── direct company crawling (no standard ATS) ─────────────────────────────
+
+    async def crawl_direct_companies(self) -> List[Dict[str, Any]]:
+        direct_list = config.get_direct_careers()
+        if not direct_list:
+            return []
+
+        print(f"\nCrawling {len(direct_list)} direct-careers companies (Playwright)...")
+        all_jobs: List[Dict[str, Any]] = []
+
+        for company_cfg in direct_list:
+            name = company_cfg.get("company", "?")
+            print(f"  [Direct] {name}...")
+            try:
+                jobs = await self.direct_scraper.scrape(company_cfg)
+                print(f"  → {len(jobs)} jobs at {name}")
+                all_jobs.extend(jobs)
+            except Exception as e:
+                print(f"  Error {name}: {e}")
 
         return all_jobs
 
@@ -301,13 +325,13 @@ class JobCrawler:
         print("=" * 55)
 
         company_jobs = await self.crawl_all_companies()
-        print(f"\nTotal from companies: {len(company_jobs)}")
+        print(f"\nTotal from ATS companies: {len(company_jobs)}")
 
-        linkedin_jobs = await self.crawl_linkedin()
-        print(f"Total from LinkedIn: {len(linkedin_jobs)}")
+        direct_jobs = await self.crawl_direct_companies()
+        print(f"Total from direct careers: {len(direct_jobs)}")
 
-        all_jobs = company_jobs + linkedin_jobs
-        print(f"\nTotal collected: {len(all_jobs)}")
+        all_jobs = company_jobs + direct_jobs
+        print(f"Total collected: {len(all_jobs)}")
 
         print("\nFiltering...")
         filtered = self.job_filter.filter_jobs(all_jobs)

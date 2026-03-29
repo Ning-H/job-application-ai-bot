@@ -1,166 +1,305 @@
 user_profile:
   target_titles:
-    - "Data Engineer"
-    - "Principal Data Engineer"
-    - "Staff Data Engineer"
-    - "Senior Data Engineer"
-    - "Data Engineer Tech Lead"
-    - "Lead Data Engineer"
-    - "Data Engineering Manager"
-    - "Data Engineering Senior Manager"
-    - "Data Engineer Senior Manager"
-    - "Analytics Engineer"
-    - "Senior Analytics Engineer"
-    - "Staff Analytics Engineer"
-    - "Principal Analytics Engineer"
-    - "AI Engineer"
-    - "AI Deployment Engineer"
-    - "AI Enablement"
-    - "ML Engineer"
-    - "Machine Learning Engineer"
-    - "Senior ML Engineer"
-    - "Staff ML Engineer"
-    - "Principal ML Engineer"
-    - "ML Engineering Manager"
-    - "Machine Learning Manager"
-
+  - Data Engineer
+  - Principal Data Engineer
+  - Staff Data Engineer
+  - Senior Data Engineer
+  - Data Engineer Tech Lead
+  - Lead Data Engineer
+  - Data Engineering Manager
+  - Data Engineering Senior Manager
+  - Data Engineer Senior Manager
+  - Analytics Engineer
+  - Senior Analytics Engineer
+  - Staff Analytics Engineer
+  - Principal Analytics Engineer
+  - AI Engineer
+  - AI Deployment Engineer
+  - AI Enablement
+  - ML Engineer
+  - Machine Learning Engineer
+  - Senior ML Engineer
+  - Staff ML Engineer
+  - Principal ML Engineer
+  - ML Engineering Manager
+  - Machine Learning Manager
   location_preferences:
-    home_address: "801 N Fairfax St, Alexandria, VA"
+    home_address: 801 N Fairfax St, Alexandria, VA
     preferences:
-      - type: "remote"
-        priority: 1
-        min_salary: 200000
-      - type: "dmv"
-        priority: 2
-        min_salary: 230000
-        max_commute_minutes: 30
-      - type: "bay_area"
-        priority: 3
-        min_salary: 300000
-      - type: "other"
-        priority: 4
-        min_salary: 250000
-
+    - type: remote
+      priority: 1
+      min_salary: 200000
+    - type: dmv
+      priority: 2
+      min_salary: 230000
+      max_commute_minutes: 30
+    - type: bay_area
+      priority: 3
+      min_salary: 300000
+    - type: other
+      priority: 4
+      min_salary: 250000
   skills:
-    - "Python"
-    - "Data Engineering"
-    - "ETL"
-    - "Data Pipeline"
-    - "Apache Spark"
-    - "Airflow"
-    - "AWS"
-    - "GCP"
-    - "Azure"
-    - "SQL"
-    - "NoSQL"
-    - "Kafka"
-    - "Data Warehousing"
-    - "Machine Learning"
-    - "AI"
-    - "Leadership"
-    - "Team Management"
-    - "Machine Learning"
-    - "A/B Testing"
-    - "Data Science"
-    - "Snowflake"
-    - "Databricks"
-
+  - Python
+  - Data Engineering
+  - ETL
+  - Data Pipeline
+  - Apache Spark
+  - Airflow
+  - AWS
+  - GCP
+  - Azure
+  - SQL
+  - NoSQL
+  - Kafka
+  - Data Warehousing
+  - Machine Learning
+  - AI
+  - Leadership
+  - Team Management
+  - Machine Learning
+  - A/B Testing
+  - Data Science
+  - Snowflake
+  - Databricks
 target_companies:
-  # Greenhouse ATS — public JSON API, real job data, no scraping needed
   greenhouse:
-    - name: "Databricks"
-      board_id: "databricks"
-      priority: "high"
-    - name: "dbt Labs"
-      board_id: "dbtlabsinc"
-      priority: "high"
-    - name: "Anthropic"
-      board_id: "anthropic"
-      priority: "high"
-    - name: "Scale AI"
-      board_id: "scaleai"
-      priority: "high"
-    - name: "Stripe"
-      board_id: "stripe"
-      priority: "high"
-    - name: "Airbnb"
-      board_id: "airbnb"
-      priority: "medium"
-    - name: "Lyft"
-      board_id: "lyft"
-      priority: "medium"
-    - name: "Reddit"
-      board_id: "reddit"
-      priority: "medium"
-    - name: "Figma"
-      board_id: "figma"
-      priority: "medium"
-    - name: "Robinhood"
-      board_id: "robinhood"
-      priority: "medium"
-    - name: "Coinbase"
-      board_id: "coinbase"
-      priority: "medium"
-
-  # Lever ATS — public JSON API
+  - name: dbt Labs
+    board_id: dbtlabsinc
+    priority: high
+  - name: Anthropic
+    board_id: anthropic
+    priority: high
+  - name: Scale AI
+    board_id: scaleai
+    priority: high
+  - name: Stripe
+    board_id: stripe
+    priority: high
+  - name: Airbnb
+    board_id: airbnb
+    priority: medium
+  - name: Lyft
+    board_id: lyft
+    priority: medium
+  - name: Reddit
+    board_id: reddit
+    priority: medium
+  - name: Figma
+    board_id: figma
+    priority: medium
+  - name: Robinhood
+    board_id: robinhood
+    priority: medium
+  - name: Coinbase
+    board_id: coinbase
+    priority: medium
+  - name: Uber
+    board_id: uber
+    priority: high
+  - name: DoorDash
+    board_id: doordash
+    priority: high
+  - name: Pinterest
+    board_id: pinterest
+    priority: medium
+  - name: Palantir
+    board_id: palantir
+    priority: high
+  - name: Waymo
+    board_id: waymo
+    priority: high
+  - name: Brex
+    board_id: brex
+    priority: medium
+  - name: Instacart
+    board_id: instacart
+    priority: medium
+  - name: Roblox
+    board_id: roblox
+    priority: medium
+  - name: Rivian
+    board_id: rivian
+    priority: medium
+  - name: Cloudflare
+    board_id: cloudflare
+    priority: high
+  - name: Datadog
+    board_id: datadog
+    priority: high
+  - name: Glean
+    board_id: gleanwork
+    priority: high
+  - name: Anduril
+    board_id: andurilindustries
+    priority: medium
+  - name: MongoDB
+    board_id: mongodb
+    priority: high
   lever:
-    - name: "Plaid"
-      board_id: "plaid"
-      priority: "medium"
-
-  # Ashby ATS — used by many AI-focused companies
+  - name: Plaid
+    board_id: plaid
+    priority: medium
+  - name: Checkr
+    board_id: checkr
+    priority: medium
+  - name: Benchling
+    board_id: benchling
+    priority: medium
+  - name: Zoox
+    board_id: zoox
+    priority: medium
+  - name: Voleon
+    board_id: voleon
+    priority: medium
+  - name: Rackspace
+    board_id: rackspace
+    priority: low
+  - name: Sysdig
+    board_id: sysdig
+    priority: medium
   ashby:
-    - name: "OpenAI"
-      board_id: "openai"
-      priority: "high"
-    - name: "Snowflake"
-      board_id: "snowflake"
-      priority: "high"
-    - name: "Confluent"
-      board_id: "confluent"
-      priority: "high"
-    - name: "Notion"
-      board_id: "notion"
-      priority: "medium"
-    - name: "Perplexity"
-      board_id: "perplexity"
-      priority: "high"
-    - name: "xAI"
-      board_id: "xai"
-      priority: "high"
-    - name: "Midjourney"
-      board_id: "midjourney"
-      priority: "medium"
-
+  - name: OpenAI
+    board_id: openai
+    priority: high
+  - name: Confluent
+    board_id: confluent
+    priority: high
+  - name: Notion
+    board_id: notion
+    priority: medium
+  - name: Perplexity
+    board_id: perplexity
+    priority: high
+  - name: xAI
+    board_id: xai
+    priority: high
+  - name: Midjourney
+    board_id: midjourney
+    priority: medium
+  - name: Ramp
+    board_id: ramp
+    priority: high
+  - name: Cohere
+    board_id: cohere
+    priority: high
+  - name: Weights & Biases
+    board_id: wandb
+    priority: high
+  - name: Anyscale
+    board_id: anyscale
+    priority: high
+  - name: Hightouch
+    board_id: hightouch
+    priority: medium
+  - name: Harvey
+    board_id: harvey
+    priority: medium
+  - name: Retool
+    board_id: retool
+    priority: medium
+  - name: Modal
+    board_id: modal
+    priority: high
+  - name: Together AI
+    board_id: togetherai
+    priority: high
+  - name: Mistral AI
+    board_id: mistral
+    priority: high
+  - name: Pinecone
+    board_id: pinecone
+    priority: high
+  - name: LangChain
+    board_id: langchain
+    priority: high
+  - name: Adaptive Security
+    board_id: adaptivesecurity
+    priority: medium
 job_boards:
-  - name: "LinkedIn"
-    url: "https://www.linkedin.com/jobs/search/"
-    requires_auth: false
-
-# LinkedIn search terms for big tech (no public ATS API)
+- name: LinkedIn
+  url: https://www.linkedin.com/jobs/search/
+  requires_auth: false
 big_tech_linkedin:
-  - company: "Google"
-    query: "data engineer OR AI engineer OR machine learning engineer"
-  - company: "Meta"
-    query: "data engineer OR ML engineer"
-  - company: "Amazon"
-    query: "data engineer OR ML engineer"
-  - company: "Microsoft"
-    query: "data engineer OR AI engineer"
-  - company: "Apple"
-    query: "data engineer OR ML engineer"
-
+- company: Google
+  query: data engineer OR AI engineer OR machine learning engineer
+- company: Meta
+  query: data engineer OR ML engineer
+- company: Amazon
+  query: data engineer OR ML engineer
+- company: Microsoft
+  query: data engineer OR AI engineer
+- company: Apple
+  query: data engineer OR ML engineer
 crawl_settings:
   frequency_hours: 4
   max_concurrent_crawls: 5
   timeout_seconds: 30
   retry_attempts: 3
-
 ranking_weights:
   skills_match: 0.35
   salary_fit: 0.25
-  company_reputation: 0.20
-  location_preference: 0.20
-
+  company_reputation: 0.2
+  location_preference: 0.2
 auto_apply_threshold: 0.6
 human_review_threshold: 0.75
+direct_careers:
+- company: Google
+  ats_type: direct_google_careers
+  url: https://careers.google.com/jobs/results/
+  priority: high
+- company: Microsoft
+  ats_type: direct_microsoft_careers
+  url: https://jobs.careers.microsoft.com/global/en/search
+  priority: high
+- company: Meta
+  ats_type: direct_meta_careers
+  url: https://www.metacareers.com/jobs
+  priority: high
+- company: Apple
+  ats_type: direct_apple_jobs
+  url: https://jobs.apple.com/en-us/search
+  priority: medium
+- company: Amazon
+  ats_type: direct_amazon_jobs
+  url: https://www.amazon.jobs/en/search
+  priority: medium
+- company: Databricks
+  ats_type: direct_databricks_careers
+  url: https://www.databricks.com/company/careers/open-positions
+  priority: high
+- company: Snowflake
+  ats_type: direct_snowflake_careers
+  url: https://careers.snowflake.com/us/en/search-results
+  priority: high
+- company: Waymo
+  ats_type: direct_waymo_careers
+  url: https://careers.withwaymo.com/jobs/search
+  priority: high
+- company: Rippling
+  ats_type: direct_rippling_ats
+  url: https://www.rippling.com/careers/open-roles
+  priority: medium
+notes:
+  ats_validation_date: '2026-03-29'
+  likely_mismatches_fixed:
+  - Meta moved out of greenhouse into direct_careers
+  - Databricks moved out of greenhouse into direct_careers
+  - Snowflake moved out of ashby into direct_careers
+  founding_engineer_watchlist:
+  - company: Trove
+    ats_type: ashby
+    board_id: trove
+    priority: medium
+  - company: Adaptive Security
+    ats_type: ashby
+    board_id: adaptivesecurity
+    priority: medium
+  - company: Deeptune
+    ats_type: ashby
+    board_id: deeptune
+    priority: medium
+  - company: Hud
+    ats_type: ashby
+    board_id: hud
+    priority: low

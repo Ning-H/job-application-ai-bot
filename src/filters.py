@@ -30,9 +30,9 @@ DMV_KEYWORDS = [
     "fairfax", "falls church", "annandale", "vienna",
 ]
 
-# Explicitly excluded — non-US or unwanted US locations
+# Explicitly excluded — non-US countries and unwanted US metros
 EXCLUDED_KEYWORDS = [
-    # Non-US
+    # Non-US countries and cities
     "united kingdom", "london", "manchester", "england",
     "canada", "toronto", "vancouver", "montreal",
     "germany", "berlin", "munich", "france", "paris",
@@ -40,9 +40,12 @@ EXCLUDED_KEYWORDS = [
     "australia", "sydney", "melbourne", "india", "bangalore",
     "bengaluru", "hyderabad", "singapore", "japan", "tokyo",
     "israel", "ireland", "dublin", "spain", "poland", "warsaw", "switzerland",
+    "south korea", "korea", "seoul", "taiwan", "taipei",
+    "brazil", "mexico", "argentina", "chile",
     "europe", "emea", "apac", "latam",
-    # Country code patterns in Ashby/Greenhouse locations (e.g. "Remote - PL-Warsaw")
-    # Note: Removed "-ca-" to avoid excluding California jobs
+    # Country code patterns in Ashby/Greenhouse locations (e.g. "Remote - FR", "Remote - UK")
+    "- uk", "- gb", "- de", "- fr", "- nl", "- se", "- au", "- in", "- sg",
+    "- pl", "- ie", "- es", "- ch", "- ca\n", "- ca ", "- ca,",
     "-pl-", "-uk-", "-de-", "-fr-", "-nl-", "-se-", "-au-", "-in-", "-sg-",
     "-ie-", "-es-", "-ch-",
     # Excluded US metros
@@ -57,26 +60,40 @@ EXCLUDED_KEYWORDS = [
     "phoenix", " az,", ", az",
     "portland", " or,", ", or",
     "minneapolis", " mn,", ", mn",
+    "nashville", " tn,", ", tn",
+    "charlotte", "raleigh", " nc,", ", nc",
+    "pittsburgh", "philadelphia", " pa,", ", pa",
+    "detroit", "cleveland", " oh,", ", oh",
+    "salt lake", " ut,", ", ut",
+    "kansas city", "st. louis", " mo,", ", mo",
+    "las vegas", " nv,", ", nv",
+    "new orleans", " la,", ", la",
+    " ar,", ", ar",   # Arkansas (Bentonville, etc.)
 ]
+
+# Locations that are explicitly US-wide (not tied to a specific city)
+US_WIDE_KEYWORDS = ["united states", " us,", ", us", "(us)", "usa", "u.s."]
 
 
 def _is_preferred_location(job: Dict[str, Any]) -> bool:
-    """Keep only Remote, California, and DMV-area jobs."""
+    """Keep ONLY: Remote-US, California/Bay Area, and DMV-area jobs."""
     location = (job.get("location") or "").lower().strip()
 
-    # Empty location — can't tell, keep it
+    # Empty location — keep (LLM will judge)
     if not location:
         return True
 
-    # Remote — check first before exclusions
+    # EXCLUSIONS FIRST — catches non-US countries and bad US metros
+    for kw in EXCLUDED_KEYWORDS:
+        if kw in location:
+            return False
+
+    # Remote — keep only if no non-US country indicator remains after exclusion pass
     for kw in REMOTE_KEYWORDS:
         if kw in location:
-            # But still exclude if it's remote in a non-US country
-            if any(x in location for x in ["canada", "toronto", "vancouver", "montreal"]):
-                return False
             return True
 
-    # California — check before general exclusions
+    # California / Bay Area
     for kw in CALIFORNIA_KEYWORDS:
         if kw in location:
             return True
@@ -86,13 +103,15 @@ def _is_preferred_location(job: Dict[str, Any]) -> bool:
         if kw in location:
             return True
 
-    # Check excluded (non-US or unwanted US metros)
-    for kw in EXCLUDED_KEYWORDS:
+    # Explicitly US-wide (e.g. "United States", "US", "USA")
+    if location in ("us", "usa", "u.s.", "u.s.a."):
+        return True
+    for kw in US_WIDE_KEYWORDS:
         if kw in location:
-            return False
+            return True
 
-    # Unknown US location — keep with benefit of doubt
-    return True
+    # Default: exclude — unknown/unrecognized location is likely not in our targets
+    return False
 
 
 class JobFilter:

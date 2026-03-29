@@ -29,6 +29,7 @@ Score each job 0.0–1.0 on these dimensions:
 - **overall_score**: Weighted fit (skills 40%, seniority 25%, location 15%, salary 10%, company 10%). Be honest — a score above 0.7 means this is a genuinely strong match the candidate should prioritize.
 - **salary_min / salary_max**: Use the `salary` field in the job data if provided. If not provided, look in the description for $, USD, pay range, base salary. Return as integer dollars (e.g. 200000). If a range, set min and max separately. If only one number, set both to that. If not found anywhere, return null for both.
 - **summary**: Write 4-5 sentences covering: (1) what the role does day-to-day, (2) what team/product/system it owns, (3) the core technical stack and challenges, (4) what seniority/leadership is expected, (5) anything notable about scope or impact. Be specific and concrete. No filler phrases.
+- **filter_out**: true if this job should be HARD-EXCLUDED regardless of score. Set true if ANY of: (1) salary is explicitly listed AND below candidate minimums (Remote <$200k, DMV <$230k, Bay Area <$300k); (2) location is clearly non-US; (3) role is clearly entry-level/intern/junior. Otherwise false.
 
 ## Jobs to Score
 {jobs_json}
@@ -46,6 +47,7 @@ Score each job 0.0–1.0 on these dimensions:
       "company_score": 0.85,
       "salary_min": 200000,
       "salary_max": 280000,
+      "filter_out": false,
       "summary": "2-3 sentence role summary here."
     }}
   ]
@@ -103,10 +105,16 @@ class LLMScorer:
             if chunk_start + 3 < len(batches):
                 await asyncio.sleep(2)  # brief pause between chunks
 
-        # Merge scores back into job dicts
+        # Merge scores back into job dicts, drop LLM-flagged hard exclusions
         from src.config_loader import config
+        kept = []
+        filtered_out = 0
         for job in jobs:
             s = all_score_maps.get(job["job_id"], {})
+            # Hard filter: LLM says exclude (below-min salary, non-US, entry-level)
+            if s.get("filter_out") is True:
+                filtered_out += 1
+                continue
             job["skills_match_score"] = s.get("skills_match_score", 0.3)
             job["salary_score"]       = s.get("salary_score", 0.5)
             job["company_score"]      = s.get("company_score", 0.5)
@@ -122,9 +130,12 @@ class LLMScorer:
             # Summary from LLM
             if s.get("summary"):
                 job["summary"] = s["summary"]
+            kept.append(job)
 
-        jobs.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
-        return jobs
+        if filtered_out:
+            print(f"  LLM hard-filtered {filtered_out} jobs (salary/location/level mismatch)")
+        kept.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
+        return kept
 
     async def _score_batch(self, jobs: List[Dict[str, Any]]) -> Dict[str, Dict]:
         """Score one batch, return {job_id: score_dict}."""
