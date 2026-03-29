@@ -20,7 +20,7 @@ class JobRanker:
         }
     
     def calculate_skills_match(self, job: Dict[str, Any]) -> float:
-        description = (job.get('description', '') + ' ' + job.get('title', '')).lower()
+        description = ((job.get('description') or '') + ' ' + (job.get('title') or '')).lower()
         
         matched_skills = 0
         for skill in self.skills:

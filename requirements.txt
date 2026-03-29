@@ -1,7 +1,7 @@
-claw
 playwright
+pyyaml
 beautifulsoup4
-lxml
+lxml>=4.9.0
 sqlalchemy
 schedule
 openai
@@ -11,5 +11,5 @@ requests
 geopy
 pydantic
 aiohttp
-asyncio
 apscheduler
+flask

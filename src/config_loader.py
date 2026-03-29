@@ -30,7 +30,8 @@ class Config:
     def get_all_companies(self) -> List[Dict[str, str]]:
         companies = []
         for category, company_list in self.target_companies.items():
-            companies.extend(company_list)
+            if isinstance(company_list, list):
+                companies.extend(company_list)
         return companies
     
     def get_job_boards(self) -> List[Dict[str, Any]]:

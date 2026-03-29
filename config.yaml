@@ -1,15 +1,29 @@
 user_profile:
   target_titles:
+    - "Data Engineer"
     - "Principal Data Engineer"
-    - "Data Engineer Tech Lead"
-    - "Data Engineer Senior Manager"
-    - "Senior Data Engineer"
     - "Staff Data Engineer"
+    - "Senior Data Engineer"
+    - "Data Engineer Tech Lead"
+    - "Lead Data Engineer"
+    - "Data Engineering Manager"
+    - "Data Engineering Senior Manager"
+    - "Data Engineer Senior Manager"
+    - "Analytics Engineer"
+    - "Senior Analytics Engineer"
+    - "Staff Analytics Engineer"
+    - "Principal Analytics Engineer"
     - "AI Engineer"
+    - "AI Deployment Engineer"
     - "AI Enablement"
     - "ML Engineer"
     - "Machine Learning Engineer"
-  
+    - "Senior ML Engineer"
+    - "Staff ML Engineer"
+    - "Principal ML Engineer"
+    - "ML Engineering Manager"
+    - "Machine Learning Manager"
+
   location_preferences:
     home_address: "801 N Fairfax St, Alexandria, VA"
     preferences:
@@ -26,7 +40,7 @@ user_profile:
       - type: "other"
         priority: 4
         min_salary: 250000
-  
+
   skills:
     - "Python"
     - "Data Engineering"
@@ -45,63 +59,98 @@ user_profile:
     - "AI"
     - "Leadership"
     - "Team Management"
+    - "A/B Testing"
+    - "Data Science"
+    - "Snowflake"
+    - "Databricks"
 
 target_companies:
-  tech_giants:
-    - name: "Google"
-      careers_url: "https://careers.google.com/jobs/results/"
-      priority: "high"
-    - name: "Meta"
-      careers_url: "https://www.metacareers.com/jobs"
-      priority: "high"
-    - name: "Amazon"
-      careers_url: "https://www.amazon.jobs/en/search"
-      priority: "high"
-    - name: "Microsoft"
-      careers_url: "https://careers.microsoft.com/professionals/us/en/search-results"
-      priority: "high"
-    - name: "Apple"
-      careers_url: "https://jobs.apple.com/en-us/search"
-      priority: "high"
-  
-  data_focused:
+  # Greenhouse ATS — public JSON API, real job data, no scraping needed
+  greenhouse:
     - name: "Databricks"
-      careers_url: "https://www.databricks.com/company/careers"
-      priority: "high"
-    - name: "Snowflake"
-      careers_url: "https://careers.snowflake.com/us/en"
-      priority: "high"
-    - name: "Confluent"
-      careers_url: "https://www.confluent.io/careers/"
+      board_id: "databricks"
       priority: "high"
     - name: "dbt Labs"
-      careers_url: "https://www.getdbt.com/careers"
-      priority: "high"
-  
-  ai_companies:
-    - name: "OpenAI"
-      careers_url: "https://openai.com/careers"
+      board_id: "dbtlabsinc"
       priority: "high"
     - name: "Anthropic"
-      careers_url: "https://www.anthropic.com/careers"
+      board_id: "anthropic"
       priority: "high"
     - name: "Scale AI"
-      careers_url: "https://scale.com/careers"
+      board_id: "scaleai"
       priority: "high"
+    - name: "Stripe"
+      board_id: "stripe"
+      priority: "high"
+    - name: "Airbnb"
+      board_id: "airbnb"
+      priority: "medium"
+    - name: "Lyft"
+      board_id: "lyft"
+      priority: "medium"
+    - name: "Reddit"
+      board_id: "reddit"
+      priority: "medium"
+    - name: "Figma"
+      board_id: "figma"
+      priority: "medium"
+    - name: "Robinhood"
+      board_id: "robinhood"
+      priority: "medium"
+    - name: "Coinbase"
+      board_id: "coinbase"
+      priority: "medium"
+
+  # Lever ATS — public JSON API
+  lever:
+    - name: "Plaid"
+      board_id: "plaid"
+      priority: "medium"
+
+  # Ashby ATS — used by many AI-focused companies
+  ashby:
+    - name: "OpenAI"
+      board_id: "openai"
+      priority: "high"
+    - name: "Snowflake"
+      board_id: "snowflake"
+      priority: "high"
+    - name: "Confluent"
+      board_id: "confluent"
+      priority: "high"
+    - name: "Notion"
+      board_id: "notion"
+      priority: "medium"
+    - name: "Perplexity"
+      board_id: "perplexity"
+      priority: "high"
+    - name: "xAI"
+      board_id: "xai"
+      priority: "high"
+    - name: "Midjourney"
+      board_id: "midjourney"
+      priority: "medium"
 
 job_boards:
   - name: "LinkedIn"
     url: "https://www.linkedin.com/jobs/search/"
-    requires_auth: true
-  - name: "Indeed"
-    url: "https://www.indeed.com/jobs"
-    requires_auth: false
-  - name: "Glassdoor"
-    url: "https://www.glassdoor.com/Job/jobs.htm"
     requires_auth: false
 
+# LinkedIn search terms for big tech (no public ATS API)
+big_tech_linkedin:
+  - company: "Google"
+    query: "data engineer OR AI engineer OR machine learning engineer"
+  - company: "Meta"
+    query: "data engineer OR ML engineer"
+  - company: "Amazon"
+    query: "data engineer OR ML engineer"
+  - company: "Microsoft"
+    query: "data engineer OR AI engineer"
+  - company: "Apple"
+    query: "data engineer OR ML engineer"
+
 crawl_settings:
-  frequency_hours: 6
+  frequency_hours: 4
   max_concurrent_crawls: 5
   timeout_seconds: 30
   retry_attempts: 3
